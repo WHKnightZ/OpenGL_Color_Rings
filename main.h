@@ -1,16 +1,18 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "../../Library/loadpng.h"
-#include "../../Library/process_image.h"
+#include "../Library/loadpng.h"
+#include "../Library/process_image.h"
 
 #include <list>
+
+#include <time.h>
 
 #include <math.h>
 
 #include <GL/glut.h>
 
-#include "../../Library/gl_texture.h"
+#include "../Library/gl_texture.h"
 
 /*
 #include <GL/gl.h>
@@ -24,29 +26,32 @@
 #define MAX_Y 3
 #define START_Y 110.0f
 #define SPAWN_RING_Y 540.0f
+#define SPAWN_RING_Y_BEGIN 640.0f
 #define SPACE_SIZE 140.0f
 #define RCT_CHECK_HALF_SIZE 50.0f
 #define MAX_COLOR 6
 #define MOVE_VELOCITY_BASE 8.0f
+#define MAX_SPAWN_RING_TIME 20
 #define MAX_ZOOM_TIME 20
+#define MAX_LINE_TIME 20
+
+#define COUNT_TO_INCREASE_COLOR 12
+
+#define SQRT_2 1.414213562f
+
+#define LINE_WIDTH 60.0f
+#define LINE_THICKNESS 40.0f
+
 #define INTERVAL 15
 
 int POS_X, POS_Y;
 int Max_X = MAX_X - 1, Max_Y = MAX_Y - 1;
+int Max_Color = 3, Game_Count = 0;
 
 enum GAME_STATE {
     GAME_STT_PLAY,
-    GAME_STT_RING_EXPLODE
-};
-
-enum RING_COLOR {
-    NONE,
-    RED,
-    GREEN,
-    CYAN,
-    PINK,
-    YELLOW,
-    BLUE
+    GAME_STT_RING_EXPLODE,
+    GAME_STT_RING_SPAWN
 };
 
 class c_Cell {
@@ -103,6 +108,20 @@ class c_Zoom_Ring {
 int Zoom_Ring_Stt;
 std::list<c_Zoom_Ring> List_Zoom_Ring;
 
+class c_Line {
+  public:
+    c_Line(c_Save_Ring &c1, c_Save_Ring &c2);
+    float x1, y1, x2, y2, x3, y3, x4, y4;
+    float Offset1, Offset2;
+    int Color;
+    void Reload();
+    void Draw();
+};
+
+int Line_Stt;
+std::list<c_Line> List_Line;
+float Line_Width_2 = LINE_WIDTH / SQRT_2, Line_Thickness_2 = LINE_THICKNESS / SQRT_2;
+
 class c_Explode_Dot {
   public:
     c_Explode_Dot() {}
@@ -130,8 +149,10 @@ class c_Spawn_Dot {
 void Draw_Board();
 void Game_Display_Play();
 void Game_Display_Ring_Explode();
+void Game_Display_Ring_Spawn();
 void Game_Process_Play();
 void Game_Process_Ring_Explode();
+void Game_Process_Ring_Spawn();
 
 // class.h
 // find.h
@@ -150,8 +171,8 @@ void Swap(int *x, int *y);
 
 // Function_Pointer
 void (*Find_Matching_Func[])(int &x, int &y) = {Find_Matching_SW_NE, Find_Matching_W_E, Find_Matching_NW_SE, Find_Matching_N_S};
-void (*Game_Display_Func[])() = {Game_Display_Play, Game_Display_Ring_Explode};
-void (*Game_Process_Func[])() = {Game_Process_Play, Game_Process_Ring_Explode};
+void (*Game_Display_Func[])() = {Game_Display_Play, Game_Display_Ring_Explode, Game_Display_Ring_Spawn};
+void (*Game_Process_Func[])() = {Game_Process_Play, Game_Process_Ring_Explode, Game_Process_Ring_Spawn};
 
 // Variable
 
@@ -161,19 +182,20 @@ float Color_White[] = {1.0f, 1.0f, 1.0f};
 
 float Ring_Color[MAX_COLOR + 1][3] = {
     {1.000f, 1.000f, 1.000f},
-    {1.000f, 0.000f, 0.000f},
     {0.000f, 1.000f, 0.000f},
     {0.000f, 1.000f, 1.000f},
     {1.000f, 0.000f, 0.808f},
     {1.000f, 0.890f, 0.000f},
+    {1.000f, 0.000f, 0.000f},
     {0.075f, 0.216f, 1.000f}};
 
-float Spawn_Ring_X, Spawn_Ring_Y;
+float Spawn_Ring_X, Spawn_Ring_Y, Spawn_Ring_Begin, Spawn_Ring_Offset;
+int Spawn_Ring_Stt;
 float Ring_Size[3], Ring_Offset[3];
 
 float Start_X, Start_Y, Start_X_Rct, Start_Y_Rct;
 Image Img_Ring[3];
-Image Img_Dot;
+Image Img_Dot, Img_Line;
 c_Cell Map[MAX_Y][MAX_X];
 c_Spawn_Ring Spawn_Ring;
 bool Is_Hold_Mouse = false, Is_Move_Ring = false, Is_Put = false;

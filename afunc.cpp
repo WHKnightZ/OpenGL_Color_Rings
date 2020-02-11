@@ -38,8 +38,10 @@ void Ring_Explode_Timer() {
         }
         if (End) {
             List_Explode_Dot.erase(it++);
-            if (List_Explode_Dot.empty())
-                Game_State = GAME_STT_PLAY;
+            if (List_Explode_Dot.empty()) {
+                Spawn_Ring_Stt = 0;
+                Game_State = GAME_STT_RING_SPAWN;
+            }
         } else
             it++;
     }
@@ -79,6 +81,20 @@ void Game_Display_Ring_Explode() {
         glColor3fv(Ring_Color[it->Color]);
         Draw_Rect(&it->Rct);
     }
+    Map_Texture(&Img_Line);
+    for (std::list<c_Line>::iterator it = List_Line.begin(); it != List_Line.end(); it++)
+        it->Draw();
+}
+
+void Game_Display_Ring_Spawn() {
+    Draw_Board();
+    for (int i = 0; i < 3; i++) {
+        if (Spawn_Ring.Ring_Value[i] != 0) {
+            glColor3fv(Ring_Color[Spawn_Ring.Ring_Value[i]]);
+            Map_Texture(&Img_Ring[i]);
+            Draw_Rect(&Spawn_Ring.Rct_Ring[i]);
+        }
+    }
 }
 
 // Process
@@ -100,8 +116,9 @@ void Game_Process_Play() {
                         Map[Dest_Y][Dest_X].Ring_Value[i] = Spawn_Ring.Ring_Value[i];
                 Find_Matching(Dest_X, Dest_Y);
                 Spawn_Ring.Reload_Value();
-            }
-            Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Y);
+                Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Begin);
+            } else
+                Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Y);
             Is_Move_Ring = false;
         }
         Redraw = true;
@@ -119,5 +136,24 @@ void Game_Process_Ring_Explode() {
         if (Zoom_Ring_Stt == MAX_ZOOM_TIME)
             List_Zoom_Ring.clear();
     }
+    if (Line_Stt < MAX_LINE_TIME) {
+        for (std::list<c_Line>::iterator it = List_Line.begin(); it != List_Line.end(); it++)
+            it->Reload();
+        Line_Stt++;
+        if (Line_Stt == MAX_LINE_TIME)
+            List_Line.clear();
+    }
     glutPostRedisplay();
+}
+
+void Game_Process_Ring_Spawn() {
+    if (Spawn_Ring_Stt < MAX_SPAWN_RING_TIME) {
+        Spawn_Ring_Stt++;
+        float x = Spawn_Ring.x;
+        float y = Spawn_Ring.y - Spawn_Ring_Offset;
+        Spawn_Ring.Reload_Pos(x, y);
+        glutPostRedisplay();
+    } else {
+        Game_State = GAME_STT_PLAY;
+    }
 }

@@ -67,8 +67,10 @@ int Check_Can_Put(int Cell_X, int Cell_Y, int x, int y) {
 }
 
 void Init_Game() {
+    srand(time(NULL));
     Rect *p;
     Load_Texture(&Img_Dot, "Images/Dot.png");
+    Load_Texture(&Img_Line, "Images/Line.png");
     Load_Texture(&Img_Ring[0], "Images/Skin_Circle_Small.png");
     Load_Texture(&Img_Ring[1], "Images/Skin_Circle_Medium.png");
     Load_Texture(&Img_Ring[2], "Images/Skin_Circle_Large.png");
@@ -105,6 +107,8 @@ void Init_Game() {
     }
     Spawn_Ring_X = WIDTH / 2.0f;
     Spawn_Ring_Y = SPAWN_RING_Y;
+    Spawn_Ring_Begin = SPAWN_RING_Y_BEGIN;
+    Spawn_Ring_Offset = (SPAWN_RING_Y_BEGIN - SPAWN_RING_Y) / MAX_SPAWN_RING_TIME;
     Spawn_Ring.Reload_Value();
     Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Y);
     for (int i = 0; i < 3; i++)

@@ -17,7 +17,7 @@ void Timer(int value) {
 }
 
 void Mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON) {
+    if (Game_State == GAME_STT_PLAY && button == GLUT_LEFT_BUTTON) {
         if (state == GLUT_DOWN) {
             if (Check_In_Rect(&Spawn_Ring.Rct_Check, x, y)) {
                 Is_Hold_Mouse = true;
@@ -28,6 +28,9 @@ void Mouse(int button, int state, int x, int y) {
             int b = (y - Start_Y_Rct) / SPACE_SIZE;
             if (Check_Can_Put(a, b, x, y)) {
                 Is_Put = true;
+                Game_Count++;
+                if (Game_Count % COUNT_TO_INCREASE_COLOR == 0 && Max_Color < MAX_COLOR)
+                    Max_Color++;
                 Dest_X = a;
                 Dest_Y = b;
                 Move_Dest_X = Start_X + a * SPACE_SIZE;
@@ -56,7 +59,7 @@ void Mouse(int button, int state, int x, int y) {
 }
 
 void Motion(int x, int y) {
-    if (Is_Hold_Mouse) {
+    if (Game_State == GAME_STT_PLAY && Is_Hold_Mouse) {
         Spawn_Ring.Reload_Pos(x, y);
     }
 }

@@ -126,8 +126,10 @@ void Find_Matching(int &x, int &y) {
             Match_Ring[j].Clear();
         Find_Matching_Func[i](x, y);
         for (int j = 0; j < Match_Ring_Count; j++)
-            if (Match_Ring[j].Count == 3)
+            if (Match_Ring[j].Count == 3) {
+                List_Line.push_front(c_Line(Match_Ring[j].Lst.front(), Match_Ring[j].Lst.back()));
                 Lst.insert(Lst.end(), Match_Ring[j].Lst.begin(), Match_Ring[j].Lst.end());
+            }
     }
 
     if (Count_Type == 3 && Match_Ring_Count == 1 && Lst.empty()) {
@@ -148,6 +150,10 @@ void Find_Matching(int &x, int &y) {
     if (!Lst.empty()) {
         Explode_Dot_Stt = 0;
         Zoom_Ring_Stt = 0;
+        Line_Stt = 0;
         Game_State = GAME_STT_RING_EXPLODE;
+    } else {
+        Spawn_Ring_Stt = 0;
+        Game_State = GAME_STT_RING_SPAWN;
     }
 }
