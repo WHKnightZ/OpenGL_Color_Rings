@@ -1,5 +1,49 @@
 #include "main.h"
 
+// Effect
+
+void Init_Effect() {
+    int n = 0;
+    float r = 5.0f;
+    while (r < 7.0f) {
+        Explode_Dot_Radius[n] = r;
+        r *= 1.08f;
+        n++;
+    }
+    Explode_Dot_Radius_Center = n;
+    while (r > 2.0f) {
+        Explode_Dot_Radius[n] = r;
+        r /= 1.08f;
+        n++;
+    }
+    Explode_Dot_Radius_Max = n;
+    Explode_Dot_Radius[n - 1] = 0.0f;
+    for (int i = 0; i < Explode_Dot_Radius_Max; i++) {
+        Explode_Dot_Radius[i] = (int)Explode_Dot_Radius[i];
+    }
+    float x, y, vx, vy;
+    int Max;
+    FILE *f = fopen("Effects/Ring_Explode.txt", "r");
+    fscanf(f, "%d", &Explode_Dot_Max);
+    for (int i = 0; i < Explode_Dot_Max; i++) {
+        fscanf(f, "%d", &Explode_Dot_Full[i]);
+        for (int j = 0; j < Explode_Dot_Full[i]; j++) {
+            fscanf(f, "%f%f%f%f%d", &x, &y, &vx, &vy, &Max);
+            Explode_Dot_Default[i][j].Init(x, y, vx, vy, Max);
+        }
+    }
+    fclose(f);
+}
+
+int Find_In_List_Spawn_Dot(int x, int y) {
+    for (int i = 0; i < Count_List_Spawn_Dot; i++)
+        if (List_Spawn_Dot[i].x == x && List_Spawn_Dot[i].y == y)
+            return i;
+    return -1;
+}
+
+// End Effect
+
 void Swap(int *x, int *y) {
     int Tmp = *x;
     *x = *y;
@@ -67,6 +111,7 @@ void Init_Game() {
         for (int j = 0; j < 3; j++)
             for (int k = 0; k < 3; k++)
                 Map[i][j].Ring_Value[k] = 0;
+    Init_Effect();
 }
 
 void Init_GL() {

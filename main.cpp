@@ -2,30 +2,7 @@
 
 void Display() {
     glClear(GL_COLOR_BUFFER_BIT);
-    c_Cell *p;
-    for (int i = 0; i < MAX_Y; i++) {
-        for (int j = 0; j < MAX_X; j++) {
-            p = &Map[i][j];
-            glColor3fv(Color_White);
-            Map_Texture(&Img_Dot);
-            Draw_Rect(&p->Rct_Dot);
-            for (int k = 0; k < 3; k++) {
-                if (p->Ring_Value[k] != 0) {
-                    glColor3fv(Ring_Color[p->Ring_Value[k]]);
-                    Map_Texture(&Img_Ring[k]);
-                    Draw_Rect(&p->Rct_Ring[k]);
-                }
-            }
-        }
-    }
-    for (int i = 0; i < 3; i++) {
-        if (Spawn_Ring.Ring_Value[i] != 0) {
-            glColor3fv(Ring_Color[Spawn_Ring.Ring_Value[i]]);
-            Map_Texture(&Img_Ring[i]);
-            Draw_Rect(&Spawn_Ring.Rct_Ring[i]);
-        }
-    }
-    glLoadIdentity();
+    Game_Display_Func[Game_State]();
     glutSwapBuffers();
 }
 
@@ -35,27 +12,7 @@ void Resize(int x, int y) {
 }
 
 void Timer(int value) {
-    if (Is_Hold_Mouse)
-        glutPostRedisplay();
-    if (Is_Move_Ring && Move_Timer < Move_Max) {
-        Move_Timer++;
-        if (Move_Timer < Move_Max) {
-            float x = Spawn_Ring.x + Move_Velocity_X;
-            float y = Spawn_Ring.y + Move_Velocity_Y;
-            Spawn_Ring.Reload_Pos(x, y);
-        } else {
-            if (Is_Put) {
-                for (int i = 0; i < 3; i++)
-                    if (Spawn_Ring.Ring_Value[i])
-                        Map[Dest_Y][Dest_X].Ring_Value[i] = Spawn_Ring.Ring_Value[i];
-                Find_Matching(Dest_X, Dest_Y);
-                Spawn_Ring.Reload_Value();
-            }
-            Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Y);
-            Is_Move_Ring = false;
-        }
-        glutPostRedisplay();
-    }
+    Game_Process_Func[Game_State]();
     glutTimerFunc(INTERVAL, Timer, 0);
 }
 

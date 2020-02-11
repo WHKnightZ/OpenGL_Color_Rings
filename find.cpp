@@ -20,7 +20,7 @@ void Push_Front(int &x, int &y) {
                 Match_Ring[Index].Is_Add = true;
                 Match_Ring[Index].Count++;
             }
-            Match_Ring[Index].Lst.push_front(c_Save_Ring(x, y, i));
+            Match_Ring[Index].Lst.push_front(c_Save_Ring(x, y, i, Match_Ring[Index].Color));
         }
     }
 }
@@ -38,7 +38,7 @@ void Push_Back(int &x, int &y) {
                 Match_Ring[Index].Is_Add = true;
                 Match_Ring[Index].Count++;
             }
-            Match_Ring[Index].Lst.push_back(c_Save_Ring(x, y, i));
+            Match_Ring[Index].Lst.push_back(c_Save_Ring(x, y, i, Match_Ring[Index].Color));
         }
     }
 }
@@ -115,7 +115,7 @@ void Find_Matching(int &x, int &y) {
                 Match_Ring[Match_Ring_Count].Init(Color, x, y, i);
                 Match_Ring_Count++;
             } else {
-                Match_Ring[Index].Lst_Save.push_back(c_Save_Ring(x, y, i));
+                Match_Ring[Index].Lst_Save.push_back(c_Save_Ring(x, y, i, Color));
             }
         }
     }
@@ -132,9 +132,22 @@ void Find_Matching(int &x, int &y) {
 
     if (Count_Type == 3 && Match_Ring_Count == 1 && Lst.empty()) {
         for (int i = 0; i < 3; i++)
-            Lst.push_front(c_Save_Ring(x, y, i));
+            Lst.push_front(c_Save_Ring(x, y, i, Match_Ring[0].Color));
     }
 
-    for (std::list<c_Save_Ring>::iterator it = Lst.begin(); it != Lst.end(); it++)
+    Count_List_Spawn_Dot = 0;
+    for (std::list<c_Save_Ring>::iterator it = Lst.begin(); it != Lst.end(); it++) {
+        List_Zoom_Ring.push_front(c_Zoom_Ring(it->x, it->y, it->Type, it->Color));
+        if (Find_In_List_Spawn_Dot(it->x, it->y) == -1) {
+            List_Spawn_Dot[Count_List_Spawn_Dot].Init(it->x, it->y, it->Color);
+            Count_List_Spawn_Dot++;
+        }
         Map[it->y][it->x].Ring_Value[it->Type] = 0;
+    }
+
+    if (!Lst.empty()) {
+        Explode_Dot_Stt = 0;
+        Zoom_Ring_Stt = 0;
+        Game_State = GAME_STT_RING_EXPLODE;
+    }
 }

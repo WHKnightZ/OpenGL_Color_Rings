@@ -28,23 +28,25 @@
 #define RCT_CHECK_HALF_SIZE 50.0f
 #define MAX_COLOR 6
 #define MOVE_VELOCITY_BASE 8.0f
+#define MAX_ZOOM_TIME 20
 #define INTERVAL 15
 
 int POS_X, POS_Y;
 int Max_X = MAX_X - 1, Max_Y = MAX_Y - 1;
 
 enum GAME_STATE {
-    GAME_STT
+    GAME_STT_PLAY,
+    GAME_STT_RING_EXPLODE
 };
 
 enum RING_COLOR {
     NONE,
     RED,
     GREEN,
-    BLUE,
     CYAN,
     PINK,
-    YELLOW
+    YELLOW,
+    BLUE
 };
 
 class c_Cell {
@@ -67,12 +69,13 @@ class c_Spawn_Ring {
 
 class c_Save_Ring {
   public:
-    c_Save_Ring(int x, int y, int Type) {
+    c_Save_Ring(int x, int y, int Type, int Color) {
         this->x = x;
         this->y = y;
         this->Type = Type;
+        this->Color = Color;
     }
-    int x, y, Type;
+    int x, y, Type, Color;
 };
 
 class c_Match_Ring {
@@ -88,16 +91,47 @@ class c_Match_Ring {
 c_Match_Ring Match_Ring[3];
 int Match_Ring_Count;
 
-class c_Explode_Ball {
+class c_Zoom_Ring {
   public:
-    float x, y, r, vx, vy;
-    int Color, Stt;
+    c_Zoom_Ring(int x, int y, int Type, int Color);
+    int x, y, Type, Color;
+    float Offset;
     Rect Rct;
+    void Reload();
+};
+
+int Zoom_Ring_Stt;
+std::list<c_Zoom_Ring> List_Zoom_Ring;
+
+class c_Explode_Dot {
+  public:
+    c_Explode_Dot() {}
+    c_Explode_Dot(int x, int y, int i, int j, int Color);
+    void Init(float x, float y, float vx, float vy, int Max);
+    float x, y, vx, vy;
+    int Color, Stt, Move, Max;
+    Rect Rct;
+    void Reload();
+};
+
+class c_Spawn_Dot {
+  public:
+    int x, y, Color;
+    void Init(int x, int y, int Color) {
+        this->x = x;
+        this->y = y;
+        this->Color = Color;
+    }
 };
 
 // Prototype
 
 // afunc.h
+void Draw_Board();
+void Game_Display_Play();
+void Game_Display_Ring_Explode();
+void Game_Process_Play();
+void Game_Process_Ring_Explode();
 
 // class.h
 // find.h
@@ -116,18 +150,23 @@ void Swap(int *x, int *y);
 
 // Function_Pointer
 void (*Find_Matching_Func[])(int &x, int &y) = {Find_Matching_SW_NE, Find_Matching_W_E, Find_Matching_NW_SE, Find_Matching_N_S};
+void (*Game_Display_Func[])() = {Game_Display_Play, Game_Display_Ring_Explode};
+void (*Game_Process_Func[])() = {Game_Process_Play, Game_Process_Ring_Explode};
 
 // Variable
+
+int Game_State;
+
 float Color_White[] = {1.0f, 1.0f, 1.0f};
 
 float Ring_Color[MAX_COLOR + 1][3] = {
-    {1.0f, 1.0f, 1.0f},
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f},
-    {0.0f, 0.0f, 1.0f},
-    {0.0f, 1.0f, 1.0f},
-    {1.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}};
+    {1.000f, 1.000f, 1.000f},
+    {1.000f, 0.000f, 0.000f},
+    {0.000f, 1.000f, 0.000f},
+    {0.000f, 1.000f, 1.000f},
+    {1.000f, 0.000f, 0.808f},
+    {1.000f, 0.890f, 0.000f},
+    {0.075f, 0.216f, 1.000f}};
 
 float Spawn_Ring_X, Spawn_Ring_Y;
 float Ring_Size[3], Ring_Offset[3];
@@ -142,6 +181,17 @@ int Move_Timer, Move_Max;
 int Dest_X, Dest_Y;
 float Move_Velocity_X, Move_Velocity_Y;
 float Move_Dest_X, Move_Dest_Y;
+
+// Ring Explode
+int Find_In_List_Spawn_Dot(int x, int y);
+
+std::list<c_Explode_Dot> List_Explode_Dot;
+c_Explode_Dot Explode_Dot_Default[33][3];
+int Explode_Dot_Full[33];
+int Explode_Dot_Stt, Explode_Dot_Max, Explode_Dot_Radius_Center, Explode_Dot_Radius_Max;
+float Explode_Dot_Radius[22];
+c_Spawn_Dot List_Spawn_Dot[9];
+int Count_List_Spawn_Dot;
 
 // including all referenced .c files, you don't need to compile all of them
 #include "afunc.cpp"
