@@ -82,6 +82,7 @@ c_Zoom_Ring::c_Zoom_Ring(int x, int y, int Type, int Color) {
     Rct = Map[y][x].Rct_Ring[Type];
     Offset = Ring_Offset[Type] / MAX_ZOOM_TIME;
 }
+
 void c_Zoom_Ring::Reload() {
     Rct.Left += Offset;
     Rct.Right -= Offset;

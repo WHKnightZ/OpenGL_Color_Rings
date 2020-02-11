@@ -70,7 +70,7 @@ void Game_Display_Play() {
 void Game_Display_Ring_Explode() {
     Draw_Board();
     for (std::list<c_Zoom_Ring>::iterator it = List_Zoom_Ring.begin(); it != List_Zoom_Ring.end(); it++) {
-    	Map_Texture(&Img_Ring[it->Type]);
+        Map_Texture(&Img_Ring[it->Type]);
         glColor3fv(Ring_Color[it->Color]);
         Draw_Rect(&it->Rct);
     }
