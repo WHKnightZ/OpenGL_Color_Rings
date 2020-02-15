@@ -10,9 +10,9 @@ void Draw_Arrow() {
     }
     glColor3fv(Color_White);
     Map_Texture(&Img_Arrow_Left);
-    Draw_Rect(&Rct_Arrow_Left[Arrow_LR_Timer]);
+    Draw_Rect(&Rct_Arrow_Left[Arrow_LR_Stt]);
     Map_Texture(&Img_Arrow_Right);
-    Draw_Rect(&Rct_Arrow_Right[Arrow_LR_Timer]);
+    Draw_Rect(&Rct_Arrow_Right[Arrow_LR_Stt]);
 }
 
 void Draw_Board() {
@@ -99,9 +99,9 @@ void Game_Display_Menu() {
             Draw_Rect(&Spawn_Ring.Rct_Ring[i]);
         }
     }
-    Draw_Score();
-    Draw_Combo();
     Draw_Arrow();
+    Map_Texture(&Img_Logo);
+    Draw_Rect(&Rct_Logo);
 }
 
 void Game_Display_Play() {
@@ -115,6 +115,8 @@ void Game_Display_Play() {
     }
     Draw_Score();
     Draw_Combo();
+    Map_Texture(&Img_Home);
+    Draw_Rect(&Rct_Home);
 }
 
 void Game_Display_Ring_Explode() {
@@ -134,6 +136,8 @@ void Game_Display_Ring_Explode() {
         it->Draw();
     Draw_Score();
     Draw_Combo();
+    Map_Texture(&Img_Home);
+    Draw_Rect(&Rct_Home);
 }
 
 void Game_Display_Ring_Spawn() {
@@ -147,9 +151,17 @@ void Game_Display_Ring_Spawn() {
     }
     Draw_Score();
     Draw_Combo();
+    Map_Texture(&Img_Home);
+    Draw_Rect(&Rct_Home);
 }
 
 void Game_Display_GameOver() {
+    Game_Display_Play();
+    glColor3fv(Color_White);
+    Map_Texture(&Img_Game_Over);
+    Draw_Rect(&Rct_Game_Over[Game_Over_Stt]);
+    Map_Texture(&Img_Home);
+    Draw_Rect(&Rct_Home);
 }
 
 // Process
@@ -162,7 +174,6 @@ void Game_Process_Menu() {
     Arrow_Up_Timer++;
     if (Arrow_Up_Timer == 4) {
         Arrow_Up_Timer = 0;
-
         Arrow_Up_Alpha[Arrow_Up_Current] = 100;
         Arrow_Up_Current++;
         if (Arrow_Up_Current == 6) {
@@ -170,7 +181,33 @@ void Game_Process_Menu() {
             Arrow_Up_Timer = -30;
         }
     }
-    Arrow_LR_Timer = Arrow_LR_Loop[Arrow_LR_Timer];
+    Arrow_LR_Timer++;
+    if (Arrow_LR_Timer == 2) {
+        Arrow_LR_Timer = 0;
+        Arrow_LR_Stt++;
+        if (Arrow_LR_Stt == 20)
+            Arrow_LR_Stt = 0;
+    }
+    if (Is_Move_Ring && Move_Timer < Move_Max) {
+        Move_Timer++;
+        if (Move_Timer < Move_Max) {
+            float x = Spawn_Ring.x + Move_Velocity_X;
+            float y = Spawn_Ring.y + Move_Velocity_Y;
+            Spawn_Ring.Reload_Pos(x, y);
+        } else {
+            if (Is_Put) {
+                for (int i = 0; i < 3; i++)
+                    if (Spawn_Ring.Ring_Value[i])
+                        Map[Dest_Y][Dest_X].Ring_Value[i] = Spawn_Ring.Ring_Value[i];
+                Find_Matching(Dest_X, Dest_Y);
+                Reload_Play();
+                Spawn_Ring.Reload_Value();
+                Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Begin);
+            } else
+                Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Y);
+            Is_Move_Ring = false;
+        }
+    }
     glutPostRedisplay();
 }
 
@@ -239,9 +276,18 @@ void Game_Process_Ring_Spawn() {
         Spawn_Ring.Reload_Pos(x, y);
         glutPostRedisplay();
     } else {
-        Game_State = STATE_PLAY;
+        if (Check_Game_Over()) {
+            Mix_PlayChannel(-1, Sound_Game_Over, 0);
+            Game_Over_Stt = 0;
+            Game_State = STATE_GAMEOVER;
+        } else
+            Game_State = STATE_PLAY;
     }
 }
 
 void Game_Process_GameOver() {
+    if (Game_Over_Stt < 70) {
+        Game_Over_Stt++;
+    }
+    glutPostRedisplay();
 }

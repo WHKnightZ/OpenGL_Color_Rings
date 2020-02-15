@@ -37,13 +37,10 @@ void Init_Arrow() {
     for (int i = 11; i < 20; i++) {
         Arrow_LR_Offset[i] = Arrow_LR_Offset[20 - i];
     }
-    for (int i = 0; i < 19; i++)
-        Arrow_LR_Loop[i] = i + 1;
-    Arrow_LR_Loop[19] = 0;
     float Center = WIDTH / 2.0f, Width = Img_Arrow_Left.w;
     float Bottom = SPAWN_RING_Y - Img_Arrow_Left.h / 2;
     float Top = Bottom + Img_Arrow_Left.h;
-    Offset = 80.0f;
+    Offset = 70.0f;
     for (int i = 0; i < 20; i++) {
         p = &Rct_Arrow_Left[i];
         p->Right = Center - Arrow_LR_Offset[i] - Offset;
@@ -56,6 +53,12 @@ void Init_Arrow() {
         p->Bottom = Bottom;
         p->Top = Top;
     }
+    Rct_Check_Arrow_Left.Right = Center - Offset - 10.0f;
+    Rct_Check_Arrow_Left.Left = Rct_Check_Arrow_Left.Right - 30.0f;
+    Rct_Check_Arrow_Right.Left = Center + Offset + 10.0f;
+    Rct_Check_Arrow_Right.Right = Rct_Check_Arrow_Right.Left + 30.0f;
+    Rct_Check_Arrow_Left.Bottom = Rct_Check_Arrow_Right.Bottom = Bottom - 10.0f;
+    Rct_Check_Arrow_Left.Top = Rct_Check_Arrow_Right.Top = Top + 10.0f;
 }
 
 // Effect
@@ -209,11 +212,11 @@ void Update_Combo() {
 
 // Other
 
-int Check_In_Rect(Rect *Rct, int x, int y) {
+bool Check_In_Rect(Rect *Rct, int x, int y) {
     return (x > Rct->Left && x < Rct->Right && y > Rct->Bottom && y < Rct->Top);
 }
 
-int Check_Can_Put(int Cell_X, int Cell_Y, int x, int y) {
+bool Check_Can_Put(int Cell_X, int Cell_Y, int x, int y) {
     if (Cell_X < 0 || Cell_Y < 0 || Cell_X >= MAX_X || Cell_Y >= MAX_Y)
         return false;
     c_Cell *p = &Map[Cell_Y][Cell_X];
@@ -225,7 +228,54 @@ int Check_Can_Put(int Cell_X, int Cell_Y, int x, int y) {
     return true;
 }
 
-void Reload_Play() {
+bool Check_Game_Over() {
+    c_Cell *p;
+    bool Check;
+    for (int i = 0; i < MAX_Y; i++) {
+        for (int j = 0; j < MAX_X; j++) {
+            p = &Map[i][j];
+            Check = false;
+            for (int k = 0; k < 3; k++)
+                if (Spawn_Ring.Ring_Value[k] && p->Ring_Value[k]) {
+                    Check = true;
+                    break;
+                }
+            if (!Check)
+                return false;
+        }
+    }
+    return true;
+}
+
+void Init_Game_Over() {
+    float s = 0.0f, v = 0.0f, g = 1.4f;
+    float S[71], Max = HEIGHT / 2.0f - 20.0f;
+    float Left = (WIDTH - Img_Game_Over.w) / 2.0f;
+    float Right = Left + Img_Game_Over.w;
+    int i = 0;
+    float Friction = 0.5f;
+    while (i < 71) {
+        s += v;
+        v += g;
+        if (s > Max) {
+            s = Max;
+            v -= g;
+            v *= -Friction;
+        }
+        S[i] = s;
+        i++;
+    }
+    Rect *p;
+    for (i = 0; i < 71; i++) {
+        p = &Rct_Game_Over[i];
+        p->Left = Left;
+        p->Right = Right;
+        p->Bottom = (int)S[i] - Img_Game_Over.h / 2;
+        p->Top = p->Bottom + Img_Game_Over.h;
+    }
+}
+
+void Change_Skin() {
     Img_Dot = &Img_Dot_Full[Skin];
     for (int i = 0; i < 3; i++)
         Img_Ring[i] = &Img_Ring_Full[Skin][i];
@@ -236,6 +286,8 @@ void Reload_Play() {
         Ring_Size[i] = (float)Img_Ring[i]->w;
         Ring_Offset[i] = Ring_Size[i] / 2;
     }
+
+    Spawn_Ring.Reload_Pos(Spawn_Ring.x, Spawn_Ring.y);
 
     Rect *p;
     for (int i = 0; i < MAX_Y; i++) {
@@ -259,40 +311,64 @@ void Reload_Play() {
             }
         }
     }
+}
 
-    Spawn_Ring.Reload_Value();
+void Reload_Menu() {
     Spawn_Ring.Reload_Pos(Spawn_Ring_X, Spawn_Ring_Y);
+
+    Max_Color = 3;
+    Game_Count = 0;
 
     for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
             for (int k = 0; k < 3; k++)
                 Map[i][j].Ring_Value[k] = 0;
 
-    Map[0][0].Ring_Value[0] = 3;
-    Map[0][1].Ring_Value[2] = 1;
-    Map[0][2].Ring_Value[1] = 3;
-    Map[2][0].Ring_Value[0] = 3;
-    Map[2][1].Ring_Value[1] = 1;
-    Map[2][2].Ring_Value[2] = 3;
-    Map[1][0].Ring_Value[2] = 2;
-    Map[1][2].Ring_Value[1] = 2;
+    int Color[] = {1, 4, 5};
+    Map[0][0].Ring_Value[0] = Color[0];
+    Map[0][1].Ring_Value[2] = Color[1];
+    Map[0][2].Ring_Value[1] = Color[0];
+    Map[2][0].Ring_Value[0] = Color[0];
+    Map[2][0].Ring_Value[1] = Color[0];
+    Map[2][1].Ring_Value[1] = Color[1];
+    Map[2][2].Ring_Value[2] = Color[0];
+    Map[1][0].Ring_Value[2] = Color[2];
+    Map[1][0].Ring_Value[0] = Color[2];
+    Map[1][2].Ring_Value[0] = Color[2];
+    Map[1][2].Ring_Value[1] = Color[2];
 
-    Spawn_Ring.Ring_Value[0] = 1;
-    Spawn_Ring.Ring_Value[1] = 2;
-    Spawn_Ring.Ring_Value[2] = 3;
+    Spawn_Ring.Ring_Value[0] = Color[0];
+    Spawn_Ring.Ring_Value[1] = Color[1];
+    Spawn_Ring.Ring_Value[2] = Color[2];
 
+    glutMouseFunc(Mouse_Menu);
+
+    Game_State = STATE_MENU;
+}
+
+void Reload_Play() {
     Score = 0;
     Score_Factor = 1.0f;
     Combo = 0;
     Update_Combo();
     Update_Score();
     Update_Rect_Score();
-
-    Game_State = STATE_PLAY;
+    Is_Update_Score = false;
+    glutMouseFunc(Mouse_Game);
 }
 
 void Init_Game() {
     srand(time(NULL));
+    Load_Texture(&Img_Logo, "Images/Logo.png");
+    Rct_Logo.Left = (WIDTH - Img_Logo.w) / 2.0f;
+    Rct_Logo.Right = Rct_Logo.Left + Img_Logo.w;
+    Rct_Logo.Bottom = START_LOGO_Y - Img_Logo.h / 2;
+    Rct_Logo.Top = Rct_Logo.Bottom + Img_Logo.h;
+    Load_Texture(&Img_Home, "Images/Home.png");
+    Rct_Home.Left = WIDTH - 80.0f;
+    Rct_Home.Right = Rct_Home.Left + Img_Home.w;
+    Rct_Home.Bottom = 32.0f;
+    Rct_Home.Top = Rct_Home.Bottom + Img_Home.h;
     Load_Texture(&Img_Line, "Images/Line.png");
     char Str[40];
     for (int i = 0; i < MAX_RING_SKIN; i++) {
@@ -305,6 +381,7 @@ void Init_Game() {
         sprintf(Str, "Images/%s_Large.png", Skin_Text[i]);
         Load_Texture(&Img_Ring_Full[i][2], Str);
     }
+    Load_Texture(&Img_Game_Over, "Images/Game_Over.png");
     Init_Effect();
     Init_Img_Score();
     Init_Img_Combo();
@@ -324,10 +401,13 @@ void Init_Game() {
     for (int i = 0; i < 6; i++) {
         Arrow_Up_Alpha[i] = 0;
     }
+    Arrow_LR_Stt = 0;
     Arrow_LR_Timer = 0;
-    Reload_Play();
 
-    Game_State = STATE_MENU;
+    Init_Game_Over();
+    Init_Sound();
+
+    Change_Skin();
 }
 
 void Init_GL() {

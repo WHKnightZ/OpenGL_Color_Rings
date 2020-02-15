@@ -10,6 +10,8 @@
 
 #include <math.h>
 
+#include <SDL2/SDL_mixer.h>
+
 #include <GL/glut.h>
 
 #include "../Library/gl_texture.h"
@@ -24,6 +26,7 @@
 #define HEIGHT 650
 #define MAX_X 3
 #define MAX_Y 3
+#define START_LOGO_Y 80.0f
 #define START_Y 194.0f
 #define START_SCORE_Y 54.0f
 #define START_COMBO_Y 112.0f
@@ -43,13 +46,15 @@
 #define SQRT_2 1.414213f
 
 #define LINE_WIDTH 70.0f
-#define LINE_THICKNESS 40.0f
+#define LINE_THICKNESS 50.0f
 
 #define INTERVAL 15
 
 int POS_X, POS_Y;
 int Max_X = MAX_X - 1, Max_Y = MAX_Y - 1;
-int Max_Color = 3, Game_Count = 0;
+
+int Max_Color, Game_Count;
+int Game_State;
 
 enum GAME_STATE {
     STATE_MENU,
@@ -65,6 +70,8 @@ enum RING_SKIN {
     DIAMOND,
     HEXAGON
 };
+
+int Skin = CIRCLE;
 
 char Skin_Text[MAX_RING_SKIN][16] = {"Circle", "Square", "Diamond", "Hexagon"};
 
@@ -160,7 +167,11 @@ class c_Spawn_Dot {
 // Prototype
 
 // afunc.h
+void Draw_Arrow();
 void Draw_Board();
+void Draw_Score();
+void Draw_Combo();
+void Ring_Explode_Timer();
 void Game_Display_Menu();
 void Game_Display_Play();
 void Game_Display_Ring_Explode();
@@ -172,23 +183,46 @@ void Game_Process_Ring_Explode();
 void Game_Process_Ring_Spawn();
 void Game_Process_GameOver();
 
-// class.h
 // find.h
 int Find_In_List(int &Color);
-void Find_Matching(int &x, int &y);
 void Push_Front(int &x, int &y);
 void Push_Back(int &x, int &y);
 void Find_Matching_SW_NE(int &x, int &y);
 void Find_Matching_W_E(int &x, int &y);
 void Find_Matching_NW_SE(int &x, int &y);
 void Find_Matching_N_S(int &x, int &y);
+void Find_Matching(int &x, int &y);
 
 // init.h
 void Swap(int *x, int *y);
+void Init_Arrow();
+void Init_Effect();
+int Find_In_List_Spawn_Dot(int x, int y);
+void Init_Img_Score();
 void Update_Score();
 void Update_Rect_Score();
+void Init_Img_Combo();
 void Update_Combo();
+bool Check_In_Rect(Rect *Rct, int x, int y);
+bool Check_Can_Put(int Cell_X, int Cell_Y, int x, int y);
+bool Check_Game_Over();
+void Init_Game_Over();
+void Change_Skin();
+void Reload_Menu();
+void Reload_Play();
+void Init_Game();
+void Init_GL();
+
+// sound.h
+void Init_Sound();
+
 // main.h
+void Display();
+void Resize(int x, int y);
+void Timer(int value);
+void Mouse_Menu(int button, int state, int x, int y);
+void Mouse_Game(int button, int state, int x, int y);
+void Motion(int x, int y);
 
 // Function_Pointer
 void (*Find_Matching_Func[])(int &x, int &y) = {Find_Matching_SW_NE, Find_Matching_W_E, Find_Matching_NW_SE, Find_Matching_N_S};
@@ -196,8 +230,6 @@ void (*Game_Display_Func[])() = {Game_Display_Menu, Game_Display_Play, Game_Disp
 void (*Game_Process_Func[])() = {Game_Process_Menu, Game_Process_Play, Game_Process_Ring_Explode, Game_Process_Ring_Spawn, Game_Process_GameOver};
 
 // Variable
-
-int Game_State;
 
 float Color_White[] = {1.0f, 1.0f, 1.0f};
 
@@ -225,16 +257,15 @@ float Ring_Color[][3] = {
     {0.463f, 0.839f, 0.929f},
     {0.557f, 0.439f, 0.392f}};
 
-int Skin = CIRCLE;
-
 // Menu
 Image Img_Logo;
+Rect Rct_Logo;
 Image Img_Arrow_Up, Img_Arrow_Left, Img_Arrow_Right;
 int Arrow_Up_Alpha[6], Arrow_Up_Current, Arrow_Up_Timer;
 Rect Rct_Arrow_Up[6];
-int Arrow_LR_Timer;
+int Arrow_LR_Stt, Arrow_LR_Timer;
 Rect Rct_Arrow_Left[20], Rct_Arrow_Right[20];
-int Arrow_LR_Loop[20];
+Rect Rct_Check_Arrow_Left, Rct_Check_Arrow_Right;
 
 // Game
 float Spawn_Ring_X, Spawn_Ring_Y, Spawn_Ring_Begin, Spawn_Ring_Offset;
@@ -244,8 +275,14 @@ float Ring_Size[3], Ring_Offset[3];
 float Start_X, Start_Y, Start_X_Rct, Start_Y_Rct;
 Image Img_Ring_Full[MAX_RING_SKIN][3], Img_Dot_Full[MAX_RING_SKIN];
 
+Image Img_Home;
+Rect Rct_Home;
+
 Image *Img_Ring[3];
 Image *Img_Dot, Img_Line;
+Image Img_Game_Over;
+Rect Rct_Game_Over[71];
+int Game_Over_Stt;
 
 c_Cell Map[MAX_Y][MAX_X];
 c_Spawn_Ring Spawn_Ring;
@@ -280,10 +317,16 @@ int Combo, Combo_Array[3], Combo_Length;
 float Combo_Width, Combo_Height, Combo_Bottom, Combo_Top;
 Rect Rct_Combo[3];
 
+// Sound
+Mix_Chunk *Sound_Tick = NULL;
+Mix_Chunk *Sound_Explode = NULL;
+Mix_Chunk *Sound_Game_Over = NULL;
+
 // Including all referenced .c files, you don't need to compile all of them
 #include "afunc.cpp"
 #include "class.cpp"
 #include "find.cpp"
 #include "init.cpp"
+#include "sound.cpp"
 
 #endif

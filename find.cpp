@@ -149,6 +149,7 @@ void Find_Matching(int &x, int &y) {
     }
 
     if (!Lst.empty()) {
+        Mix_PlayChannel(-1, Sound_Explode, 0);
         Explode_Dot_Stt = 0;
         Zoom_Ring_Stt = 0;
         Line_Stt = 0;

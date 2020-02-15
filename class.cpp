@@ -5,7 +5,7 @@ void c_Spawn_Ring::Reload_Value() {
     if (n == 0)
         n = 1; // 1 - 2 Rings per spawn but 1 has greater chance
     for (int i = 0; i < n; i++)
-        Ring_Value[i] = rand() % 2 + 1;
+        Ring_Value[i] = rand() % Max_Color + 1;
     for (int i = n; i < 3; i++)
         Ring_Value[i] = 0;
     for (int i = 0; i < 3; i++) {
