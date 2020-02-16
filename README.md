@@ -32,6 +32,4 @@ Thank to Pink Pointer
 
 ## Youtube:
 
-Updating ...
-
---- End ---
+https://youtu.be/8xoOQ0PFG2o
